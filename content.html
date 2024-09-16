@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test</title>
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Round" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons+Two+Tone" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<div id="app">
+  <mdui-top-app-bar class="appbar" scroll-behavior="elevate" variant="small">
+    <mdui-button-icon variant="standard" onclick="history.back()">
+      <mdui-icon name="arrow_back--two-tone"></mdui-icon>
+    </mdui-button-icon>
+    <mdui-top-app-bar-title>
+      <div style="line-height: normal;">
+        <a href="#" style="display: block;font-size: 20px;color:inherit;text-decoration:none">Test</a>
+        <a href="https://github.com/huajiqaq/zhihu_web/join.md"
+          style="display: block;font-size: 16px;color:inherit;text-decoration:none">加入我们的开发</a>
+      </div>
+    </mdui-top-app-bar-title>
+    <mdui-dropdown trigger="hover" placement="auto" open-delay="150" close-delay="150">
+      <mdui-button-icon slot="trigger" class="icon" variant="standard">
+        <mdui-icon name="more_vert--two-tone">
+        </mdui-icon>
+      </mdui-button-icon>
+      <mdui-menu class="menu" submenu-trigger="click hover">
+        <mdui-menu-item href="https://github.com/huajiqaq/zhihu_web/join.md">加入我们</mdui-menu-item>
+      </mdui-menu>
+    </mdui-dropdown>
+
+  </mdui-top-app-bar>
+
+  <mdui-layout-main id="layout-main">
+
+    <div class="content" style="margin:16px"></div>
+
+  </mdui-layout-main>
+
+</div>
+
+<script>
+
+  function resolveData(data) {
+    let contentType = data.type;
+    let content = data[contentType]
+
+    switch (contentType) {
+      case "paragraph":
+        // 创建一个新的 span 元素
+        var newSpan = document.createElement('p');
+        newSpan.textContent = content.text;
+        newSpan.style.display = "block"
+        return newSpan
+        break;
+      case "heading":
+        var newSpan = document.createElement('h3');
+        newSpan.textContent = content.text;
+        newSpan.style.display = "block"
+        newSpan.style.fontWeight = "bold"
+        return newSpan
+        break;
+      case "code_block":
+        // 创建一个新的 span 元素
+        var newSpan = document.createElement('span');
+        newSpan.textContent = "代码块 " + content.content; // 设置 span 的文本内容
+        newSpan.style.display = "block"
+        newSpan.style.fontSize = "20px"
+        newSpan.style.fontWeight = "bold"
+        return newSpan
+        break;
+      case "blockquote":
+
+        var blockquote = document.createElement('blockquote');
+        var paragraph = document.createElement('p');
+
+        // 初始化已处理的文本长度
+        let processedTextLength = 0;
+
+        // 处理高亮标记
+        content.marks.forEach(mark => {
+          const { start_index, end_index, link } = mark;
+
+          // 计算相对于原始文本的索引
+          let startIndex = start_index + processedTextLength;
+          let endIndex = end_index + processedTextLength;
+
+          // 插入非高亮文本（如果有的话）
+          if (startIndex > 0) {
+            var plainTextSpan = document.createElement('span');
+            plainTextSpan.textContent = content.text.substring(processedTextLength, startIndex);
+            paragraph.appendChild(plainTextSpan);
+          }
+
+          // 实际上文本的高亮并没有添加 这只是a标签的高亮
+          if (link) {
+            // 创建 a 元素
+            var aLink = document.createElement('a');
+            aLink.href = link.href;
+            aLink.textContent = content.text.substring(startIndex, endIndex);
+
+            // 包装 a 元素在一个 span 中，以便应用高亮样式
+            var highlightSpan = document.createElement('span');
+            highlightSpan.className = 'highlight';
+            highlightSpan.appendChild(aLink);
+
+            // 将高亮 span 元素插入到 p 元素中
+            paragraph.appendChild(highlightSpan);
+          }
+
+          // 更新已处理的文本长度
+          processedTextLength = endIndex;
+        });
+
+        // 插入剩下的非高亮文本（如果有的话）
+        if (processedTextLength < content.text.length) {
+          var remainingTextSpan = document.createElement('span');
+          remainingTextSpan.textContent = content.text.substring(processedTextLength);
+          paragraph.appendChild(remainingTextSpan);
+        }
+
+        // 将 p 元素插入到 blockquote 中
+        blockquote.appendChild(paragraph);
+        return blockquote
+        break;
+      case "list_node":
+        // 创建 ul 元素
+        var ulElement = document.createElement('ul');
+
+        // 处理列表项
+        content.items.forEach(item => {
+          const { indent_level, marks, text } = item;
+
+          // 创建 li 元素
+          var liElement = document.createElement('li');
+
+          // 如果有高亮标记，处理高亮文本
+          if (marks.length > 0) {
+            // 初始化已处理的文本长度
+            let processedTextLength = 0;
+
+            marks.forEach(mark => {
+              const { start_index, end_index } = mark;
+
+              // 计算相对于原始文本的索引
+              let startIndex = start_index + processedTextLength;
+              let endIndex = end_index + processedTextLength;
+
+              // 插入非高亮文本（如果有的话）
+              if (startIndex > 0) {
+                var plainTextSpan = document.createElement('span');
+                plainTextSpan.textContent = text.substring(processedTextLength, startIndex);
+                liElement.appendChild(plainTextSpan);
+              }
+
+              // 创建高亮 span 元素
+              var highlightSpan = document.createElement('span');
+              highlightSpan.className = 'highlight';
+              highlightSpan.textContent = text.substring(startIndex, endIndex);
+
+              // 将高亮 span 元素插入到 li 元素中
+              liElement.appendChild(highlightSpan);
+
+              // 更新已处理的文本长度
+              processedTextLength = endIndex;
+            });
+
+            // 插入剩下的非高亮文本（如果有的话）
+            if (processedTextLength < text.length) {
+              var remainingTextSpan = document.createElement('span');
+              remainingTextSpan.textContent = text.substring(processedTextLength);
+              liElement.appendChild(remainingTextSpan);
+            }
+          } else {
+            // 没有高亮标记，直接插入文本
+            liElement.textContent = text;
+          }
+
+          // 根据缩进级别设置额外的左侧内边距
+          liElement.style.paddingLeft = `${indent_level * 20}px`;
+
+          // 将 li 元素插入到 ul 元素中
+          ulElement.appendChild(liElement);
+        });
+        return ulElement
+        break;
+      case "hr":
+        const divider = document.createElement('mdui-divider');
+        return divider
+        break;
+      case "image":
+        // 获取要插入元素的容器
+        var container = document.getElementById('content');
+
+        // 创建 figure 元素
+        var figure = document.createElement('figure');
+
+        // 创建 div 元素
+        var div = document.createElement('div');
+
+        // 创建 img 元素
+        var img = document.createElement('img');
+        img.src = content.urls[0];
+        img.style.width = "100%"
+
+        // 将 img 元素插入到 div 中
+        div.appendChild(img);
+
+        // 将 div 元素插入到 figure 中
+        figure.appendChild(div);
+
+        // 创建 figcaption 元素
+        var figcaption = document.createElement('figcaption');
+        figcaption.textContent = content.description;
+        // 将 figcaption 元素插入到 figure 中
+        figure.appendChild(figcaption);
+        return figure
+      case "card":
+        // 创建 mdui-card 元素
+        var mduiCard = document.createElement('mdui-card');
+        mduiCard.variant = 'elevated';
+        mduiCard.clickable = true;
+        mduiCard.style.width = '100%';
+        mduiCard.style.padding = '16px';
+
+        // 创建内部的 div 元素
+        var innerDiv = document.createElement('div');
+        innerDiv.style.display = 'flex';
+        innerDiv.style.alignItems = 'center';
+
+        // 创建 contents span 元素
+        var linkCardContents = document.createElement('span');
+        linkCardContents.style.flex = '1 1 auto';
+
+        extra_info = JSON.parse(content.extra_info)
+        mduiCard.href = extra_info.url
+
+        // 创建 title span 元素
+        var linkCardTitle = document.createElement('span');
+        linkCardTitle.style.display = 'block';
+        linkCardTitle.textContent = content.title || extra_info.description;
+
+
+        // 创建 desc span 元素
+        var linkCardDesc = document.createElement('span');
+        linkCardDesc.textContent = extra_info.desc;
+
+        // 创建 image span 元素
+        var linkCardImage = document.createElement('span');
+        linkCardImage.style.height = '60px';
+        linkCardImage.style.width = '60px';
+        linkCardImage.style.flexShrink = 0;
+
+        // 创建 img 元素
+        var image = document.createElement('img');
+        image.src = content.cover;
+        image.style.width = '100%';
+        image.style.height = '100%';
+        image.style.objectFit = 'cover';
+
+        // 组装元素
+        linkCardImage.appendChild(image);
+        linkCardContents.appendChild(linkCardTitle);
+        linkCardContents.appendChild(linkCardDesc);
+        innerDiv.appendChild(linkCardContents);
+        innerDiv.appendChild(linkCardImage);
+        mduiCard.appendChild(innerDiv);
+        return mduiCard
+        break;
+      case "video":
+
+        // 创建 figure 元素
+        const figure2 = document.createElement('figure');
+
+        // 创建 video 元素
+        const video = document.createElement('video');
+        video.controls = true; // 显示播放控件
+        video.autoplay = true; // 自动播放
+        video.loop = true; // 循环播放
+        video.style.width = '100%'; // 设置宽度为100%
+        video.style.height = '100%'; // 设置高度为100%
+        video.myvid = content.id
+
+        // 创建 source 子元素
+        const source = document.createElement('source');
+        source.type = 'video/mp4'; // 设置 MIME 类型
+
+        // 将 source 子元素插入到 video 元素中
+        video.appendChild(source);
+
+        // 创建 figcaption 元素
+        const figcaption2 = document.createElement('figcaption');
+        figcaption2.textContent = content.title; // 设置图注文本
+
+        // 将 video 和 figcaption 元素插入到 figure 元素中
+        figure2.appendChild(video);
+        figure2.appendChild(figcaption2);
+
+        return figure2
+      case "author":
+        // 创建主容器 - mdui-card
+        const card = document.createElement('mdui-card');
+        card.style.padding = '16px';
+        card.style.width = '100%';
+        card.style.userSelect = 'none';
+        card.clickable = true;
+
+        // 创建内部flex容器
+        const flexContainer = document.createElement('div');
+        flexContainer.style.display = 'flex';
+
+        // 创建头像图片元素
+        const avatarImg = document.createElement('img');
+        avatarImg.src = content.avatar_url;
+        avatarImg.style.borderRadius = '50%';
+        avatarImg.style.width = '50px';
+
+        // 创建文字容器
+        const textContainer = document.createElement('div');
+        textContainer.style.paddingLeft = '10px';
+
+        // 创建名字段落
+        const nameSpan = document.createElement('span');
+        nameSpan.style.display = 'block';
+        nameSpan.textContent = content.name;
+
+        // 创建用户名段落
+        const usernameSpan = document.createElement('span');
+        usernameSpan.textContent = content.headline;
+
+        // 将子元素添加到文字容器中
+        textContainer.appendChild(nameSpan);
+        textContainer.appendChild(usernameSpan);
+
+        // 将图片和文字容器添加到flex容器中
+        flexContainer.appendChild(avatarImg);
+        flexContainer.appendChild(textContainer);
+
+        // 将flex容器添加到主容器中
+        card.appendChild(flexContainer);
+        return card
+        break;
+      case "myapptip":
+        var newSpan = document.createElement('span');
+        newSpan.textContent = content.text;
+        newSpan.style.display = "block"
+        return newSpan
+        break;
+      case "imglist":
+        var newSpan = document.createElement('h3');
+        newSpan.textContent = "图片列表 待制作中（网页暂未实现）";
+        newSpan.style.display = "block"
+        return newSpan
+        break;
+      default:
+        // 处理未知类型的情况
+        return false;
+    }
+
+  }
+
+  // 获取查询字符串
+  const searchParams = new URLSearchParams(window.location.search);
+
+  const dataType = searchParams.get('type');
+  const id = searchParams.get('id');
+
+  // 示例加载函数
+  function loadContent(Div) {
+    Div = document.querySelector(".content")
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        url: "https://api.zhihu.com/" + dataType + "s" + "/v2/" + id,
+        method: "GET",
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded",
+          "x-api-version": "3.1.8",
+          "x-app-za": "OS=Android&VersionName=9.13.0&VersionCode=16816&Product=com.zhihu.android&Installer=Market&DeviceType=AndroidPhone",
+          "x-app-version": "9.13.0",
+        },
+        onload: function (xhr) {
+          const data = JSON.parse(xhr.responseText);
+
+          const structured_content = data.structured_content
+          let segments = []
+          if (structured_content) segments = structured_content.segments
+
+          if (data.relationship_tips) {
+            segments.unshift({
+              type: "myapptip",
+              myapptip: {
+                text: data.relationship_tips.text
+              }
+            });
+          }
+
+          if (data.video) {
+            segments.unshift({
+              type: "video",
+              video: {
+                id: data.video.attachment_id,
+                title: data.video.title
+              }
+            });
+          }
+
+          if (data.type === "answer" && data.header) {
+            segments.unshift({
+              type: "heading",
+              heading: {
+                text: data.header.text
+              }
+            });
+          }
+
+          if (data.image_list) {
+            segments.unshift({
+              type: "imglist",
+              imglist: {
+                images: data.image_list.images,
+                count: data.image_list.count
+              }
+            });
+          }
+
+          if (data.author) {
+            segments.unshift({
+              type: "author",
+              author: {
+                avatar_url: data.author.avatar.avatar_image.day,
+                headline: data.author.description,
+                name: data.author.fullname,
+                id: data.author.id
+              }
+            });
+          }
+
+          segments.push({
+            type: "myapptip",
+            myapptip: {
+              text: (() => {
+                const content_end_info = data.content_end_info;
+                let str = "";
+
+                if (content_end_info.update_time_text && content_end_info.update_time_text !== "") {
+                  str = content_end_info.update_time_text;
+                } else if (content_end_info.create_time_text && content_end_info.create_time_text !== "") {
+                  str = content_end_info.create_time_text;
+                }
+
+                if (content_end_info.ip_info && content_end_info.ip_info !== "") {
+                  str += " · " + content_end_info.ip_info;
+                }
+
+                if (str === "") {
+                  str = "未知";
+                }
+
+                return str;
+              })()
+            }
+          });
+
+          segments.forEach(element => {
+            let ddd = resolveData(element)
+            if (ddd != false) {
+              Div.appendChild(ddd)
+            }
+          });
+
+
+          const videos = document.querySelectorAll("video")
+          for (i = 0; i < videos.length; i++) {
+            (function (i) {
+              const video_doc = videos[i]
+              var k = video_doc.myvid
+              GM_xmlhttpRequest({
+                url: "https://lens.zhihu.com/api/v4/videos/" + k,
+                method: "GET",
+                headers: {
+                  "Content-type": "application/x-www-form-urlencoded",
+                },
+                onload: function (xhr) {
+                  videohtml = xhr.responseText
+                  var getvideourlhtml = JSON.parse(videohtml);
+                  try {
+                    videourl = getvideourlhtml.playlist.SD.play_url
+                  } catch (err) {				//抓住throw抛出的错误
+                    if (getvideourlhtml.playlist.LD.play_url) {
+                      videourl = getvideourlhtml.playlist.LD.play_url
+                    } else if (getvideourlhtml.playlist.HD.play_url) {
+                      videourl = getvideourlhtml.playlist.HD.play_url
+                    }
+                  }
+
+                  video_doc.src = videourl
+                }
+              })
+            })(i);
+          }
+
+          resolve(); // 请求成功后解析数据并解析 Promise
+        },
+        onerror: function (error) {
+          reject(error); // 请求失败时拒绝 Promise
+        }
+      });
+    });
+  }
+
+  loadContent()
+
+</script>
+
+
+<script>
+
+</script>
+
+</body>
+
+</html>

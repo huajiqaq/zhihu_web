@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zhihu_Web_Beta</title>
+  <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+  <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Round" rel="stylesheet" />
+  <link href="https://fonts.googleapis.cn/icon?family=Material+Icons+Two+Tone" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+    }
+
+    [fixed] {
+      position: fixed !important;
+    }
+  </style>
+</head>
+
+<div id="app">
+  <mdui-layout class="layout">
+    <mdui-top-app-bar class="appbar" scroll-behavior="elevate" variant="small" fixed>
+      <mdui-button-icon variant="standard" id="open">
+        <mdui-icon name="menu--two-tone"></mdui-icon>
+      </mdui-button-icon>
+      <mdui-top-app-bar-title>
+        <div style="line-height: normal;">
+          <a href="#" style="display: block;font-size: 20px;color:inherit;text-decoration:none">Test</a>
+          <a href="https://github.com/huajiqaq/zhihu_web/join.md"
+            style="display: block;font-size: 16px;color:inherit;text-decoration:none">加入我们的开发</a>
+        </div>
+      </mdui-top-app-bar-title>
+      <mdui-dropdown trigger="hover" placement="auto" open-delay="150" close-delay="150">
+        <mdui-button-icon slot="trigger" class="icon" variant="standard">
+          <mdui-icon name="more_vert--two-tone">
+          </mdui-icon>
+        </mdui-button-icon>
+        <mdui-menu class="menu" submenu-trigger="click hover">
+          <mdui-menu-item href="https://github.com/huajiqaq/zhihu_web/join.md">加入我们</mdui-menu-item>
+        </mdui-menu>
+      </mdui-dropdown>
+
+    </mdui-top-app-bar>
+
+    <mdui-navigation-drawer class="drawer" close-on-esc close-on-overlay-click placement="left" fixed>
+      <mdui-list class="list"></mdui-list>
+    </mdui-navigation-drawer>
+
+    <mdui-navigation-bar value="home" fixed label-visibility="labeled">
+      <mdui-navigation-bar-item icon="home--two-tone" value="home">主页</mdui-navigation-bar-item>
+      <mdui-navigation-bar-item icon="bubble_chart--two-tone" value="thinker">想法</mdui-navigation-bar-item>
+      <mdui-navigation-bar-item value="hot">
+        <mdui-icon src="./img/fire.svg" slot="icon"></mdui-icon>
+        热榜
+      </mdui-navigation-bar-item>
+      <mdui-navigation-bar-item icon="group--two-tone" value="follow">关注</mdui-navigation-bar-item>
+    </mdui-navigation-bar>
+
+    <mdui-layout-main id="layout-main">
+
+      <div class="page" data-hash="/home">
+        <div class="page-content">
+
+          <div id="home">
+            <mdui-tabs value="tab-1" variant="primary">
+              <mdui-tab value="tab-1">全站</mdui-tab>
+            </mdui-tabs>
+            <div class="carditem" style="margin:16px"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </mdui-layout-main>
+  </mdui-layout>
+</div>
+
+<script src="./js/router.js"></script>
+
+<script>
+
+  if (window.GM_xmlhttpRequest == null) {
+    mdui.alert({
+      headline: "提示",
+      description: "网页使用需要安装js脚本来跨域 点击我知道了安装",
+      confirmText: "我知道了",
+      onConfirm: () => window.location.href = 'https://greasyfork.org/scripts/508709',
+    });
+  } else {
+    var config = {
+      routerViewId: 'layout-main', // 路由切换的挂载点 id
+      stackPages: true, // 多级页面缓存
+      animationName: "slide", // 切换页面时的动画
+      routes: [{
+        path: "/home",
+        name: "home",
+        callback: function (route) {
+          // 获取容器
+          window.cardContainer = document.querySelector('.carditem');
+          // 使用 createInfiniteLoader 函数
+          createInfiniteLoader(cardContainer, loadMoreContent);
+        }
+      }]
+    }
+    //初始化路由
+    router.init(config)
+  }
+
+
+  // 渲染内容
+  function renderContent(data) {
+    data.forEach(item => {
+      const card = createMduiCard(item);
+      cardContainer.appendChild(card);
+    });
+  }
+
+  function resolveData(v, data) {
+    if (v.type !== "feed") {
+      return;
+    }
+
+    let isread = '"t"';
+    let readdata = v.brief;
+
+    let target = v.target || v;
+    let title = target.title;
+    let voteCount = String(target.voteup_count || target.vote_count);
+    let commentCount = String(target.comment_count);
+    let authorName = target.author.name;
+    let previewContent = `${authorName} : ${target.excerpt || target.excerpt_title}`;
+
+    let id = target.id;
+    let separatorString;
+
+    let dataType;
+    let contentType = target.type;
+
+    switch (contentType) {
+      case "answer":
+        title = target.question.title;
+        separatorString = "回答分割";
+        break;
+      case "pin":
+        title = `${authorName}发表了想法`;
+        separatorString = "想法分割";
+        break;
+      case "article":
+        separatorString = "文章分割";
+        break;
+      case "zvideo":
+        separatorString = "视频分割";
+        break;
+      case "drama":
+        separatorString = "直播分割";
+        break;
+      default:
+        // 处理未知类型的情况
+        return;
+    }
+
+    let idContent = `${separatorString}${id}`;
+
+    let add = {};
+    add.标题 = title;
+    add.预览内容 = previewContent;
+    add.评论数 = commentCount;
+    add.点赞数 = voteCount;
+    add.id内容 = idContent;
+
+    add.isread = isread;
+    add.readdata = readdata;
+
+    add.dataType = contentType
+
+    data.push(add);
+  }
+
+  function createBottom(voteup, comment) {
+    // 创建外层 div 容器
+    const containerDiv = document.createElement('div');
+    containerDiv.style.display = 'inline-flex';
+    containerDiv.style.alignItems = 'center';
+
+    if (voteup) {
+      // 创建 mdui-icon
+      const iconDiv = document.createElement('mdui-icon');
+      iconDiv.setAttribute('name', 'thumb_up--two-tone');
+      containerDiv.appendChild(iconDiv);
+      // 创建 span
+      const span = document.createElement('span');
+      span.textContent = voteup;
+      containerDiv.appendChild(span);
+    }
+
+    if (comment) {
+      // 创建 mdui-icon
+      const iconDiv = document.createElement('mdui-icon');
+      iconDiv.setAttribute('name', 'message--two-tone');
+      iconDiv.style.marginLeft = "20px"
+      containerDiv.appendChild(iconDiv);
+      // 创建 span
+      const span = document.createElement('span');
+      span.textContent = comment;
+      containerDiv.appendChild(span);
+    }
+
+    return containerDiv;
+  }
+
+  mdui.alert({
+    headline: "提示",
+    description: "网页目前仅支持主页浏览及浏览部分页面 该项目是一时兴起写的 但现在缺少维护 如果你感兴趣且熟悉js开发 可点击加入我们的开发",
+    confirmText: "我知道了",
+    onConfirm: () => console.log("confirmed"),
+  });
+
+
+
+  // 创建卡片
+  function createMduiCard(data) {
+    // 创建卡片容器
+    const card = document.createElement('mdui-card');
+    card.clickable = true;
+    card.variant = 'elevated';
+    card.style.width = "100%"
+    card.style.userSelect = "none"
+    card.style.padding = "16px"
+
+    // 创建标题
+    const headlineElement = document.createElement('div');
+    headlineElement.style.fontSize = "18sp"
+    headlineElement.style.fontWeight = "bold"
+    headlineElement.classList.add('headline');
+    headlineElement.textContent = data.标题;
+
+    // 创建描述
+    const descriptionElement = document.createElement('div');
+    descriptionElement.classList.add('description');
+    descriptionElement.textContent = data.预览内容;
+
+    // 将标题和描述添加到卡片中
+    card.appendChild(headlineElement);
+    card.appendChild(descriptionElement);
+    card.appendChild(createBottom(data.点赞数, data.评论数))
+
+    card.href = "./content.html?type=" + data.dataType + "&id=" + data.id内容.split("分割")[1];
+
+    return card;
+  }
+
+  // 示例加载函数
+  function loadMoreContent(observerDiv) {
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        url: "https://api.zhihu.com/topstory/recommend",
+        method: "GET",
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded"
+        },
+        onload: function (xhr) {
+          const data = JSON.parse(xhr.responseText);
+
+          let myd = [];
+
+          data.data.forEach(item => {
+            resolveData(item, myd);
+          });
+
+          renderContent(myd);
+          resolve(); // 请求成功后解析数据并解析 Promise
+        },
+        onerror: function (error) {
+          reject(error); // 请求失败时拒绝 Promise
+        }
+      });
+    });
+  }
+
+  /**
+ * 创建一个用于无限加载的函数
+ * @param {HTMLElement} targetElement 目标元素
+ * @param {Function} loadCallback 加载内容的回调函数
+ */
+  function createInfiniteLoader(targetElement, loadCallback) {
+    // 在目标元素后添加一个新的 div 作为观察目标
+    const observerDiv = document.createElement('div');
+    observerDiv.id = 'observerDiv';
+    targetElement.insertAdjacentElement('afterend', observerDiv);
+
+    // 创建一个 IntersectionObserver 实例
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 暂停观察
+          observer.unobserve(observerDiv);
+
+          // 加载内容
+          loadCallback(observerDiv).then(() => {
+            // 恢复观察
+            observer.observe(observerDiv);
+          }).catch(error => {
+            console.error('Error loading content:', error);
+            // 可以选择在这里重新观察，或根据具体情况处理错误
+            observer.observe(observerDiv);
+          });
+        }
+      });
+    }, {
+      root: null, // 使用视口作为根节点
+      rootMargin: '0px', // 观察区域边缘的偏移量
+      threshold: 1.0 // 观察目标完全可见时触发回调
+    });
+
+    // 开始观察新添加的 div
+    observer.observe(observerDiv);
+  }
+
+</script>
+
+
+<script>
+
+  const navigationDrawer = document.querySelector("mdui-navigation-drawer");
+  const openButton = document.getElementById("open");
+  openButton.addEventListener("click", () => {
+    const isOpen = navigationDrawer.open
+    if (isOpen) {
+      navigationDrawer.open = false
+    } else {
+      navigationDrawer.open = true
+    }
+  });
+
+  // 数据源
+  const items = [
+    { text: '主页', icon: 'home' },
+    { text: '收藏', icon: 'book' },
+    { text: '日报', icon: 'work' },
+    { text: '关注', icon: 'list_alt' },
+    { text: '更多', icon: 'menu' },
+    { type: 'divider' }, // 分割线
+    { text: '本地', icon: 'inbox' },
+    { text: '历史', icon: 'history' },
+    { text: '设置', icon: 'settings' }
+  ];
+
+  // 生成列表项
+  function generateListItems(container, items) {
+    container.innerHTML = ''; // 清空容器
+
+    items.forEach(item => {
+
+      if (item.type === 'divider') {
+        // 创建分割线元素
+        const divider = document.createElement('mdui-divider');
+        container.appendChild(divider);
+        return
+      }
+
+      // 创建列表项元素
+      const listItem = document.createElement('mdui-list-item');
+      listItem.setAttribute('rounded', '');
+      listItem.tabIndex = '0';
+      listItem.setAttribute('alignment', 'center');
+
+      // 创建图标元素
+      const iconElement = document.createElement('mdui-icon');
+      iconElement.setAttribute('slot', 'icon');
+      iconElement.setAttribute('name', item.icon + "--two-tone");
+
+      // 创建文本元素
+      const textElement = document.createElement('span');
+      textElement.textContent = item.text;
+
+      // 将图标和文本添加到列表项中
+      listItem.appendChild(iconElement);
+      listItem.appendChild(textElement);
+
+      // 将列表项添加到容器中
+      container.appendChild(listItem);
+    });
+  }
+
+  // 获取容器
+  const listContainer = navigationDrawer.querySelector('.list');
+
+  // 初始化列表
+  generateListItems(listContainer, items);
+
+</script>
+
+</body>
+
+</html>
