@@ -51,68 +51,67 @@
 </div>
 
 <style>
-  
   .slide-content {
-      display: flex;
+    display: flex;
   }
 
   .slide-item {
-      flex-shrink: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .slide-item img {
-      max-width: 100%;
-      max-height: 100vh;
-      object-fit: contain;
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
   }
 
   .dots-container {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-      margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
   }
 
   .dot {
-      width: 7px;
-      height: 7px;
-      background-color: #ebeced;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.5s;
+    width: 7px;
+    height: 7px;
+    background-color: #ebeced;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.5s;
   }
 
   .slick-active {
-      background-color: #0988ff !important;
+    background-color: #0988ff !important;
   }
 
   /* 隐藏滚动条 */
   /* Chrome, Safari, Opera */
   .hide-scrollbar::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
 
   .hide-scrollbar {
-      /* IE 和 Edge */
-      -ms-overflow-style: none;
-      /* Firefox */
-      scrollbar-width: none;
+    /* IE 和 Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
   }
 
   .index-indicator {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 16px;
-      color: white;
-      z-index: 1000;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 5px 10px;
-      border-radius: 5px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 16px;
+    color: white;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
   }
 </style>
 
@@ -662,7 +661,10 @@
     function setSlideItemStyles(content) {
       const items = content.children;
       for (let i = 0; i < items.length; i++) {
+        // 设置元素的滚动快照对齐方式为中心，使其在滚动停止时位于屏幕中央
         items[i].style.scrollSnapAlign = 'center';
+        // 设置元素的滚动快照停止行为为“总是”，使元素在滚动时保持可见，直到到达下一个快照点
+        items[i].style.scrollSnapStop = 'always';
       }
     }
 
