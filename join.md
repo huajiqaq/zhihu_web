@@ -10,7 +10,6 @@
 - [ ] 文章目录点击跳转
 - [ ] 历史记录的记录
 - [ ] 跳转例如回答页前检查重定向至网页
-- [ ] 解决想法图片列表滑动过于灵敏的问题
 - [ ] 主页支持更多Tab栏
 - [ ] 支持设置
 - [ ] 像App https://github.com/huajiqaq/Hydrogen 一样 封装类似于MyPageTool2 管理paging的next和prev https://github.com/huajiqaq/Hydrogen/blob/main/Hydrogen/app/src/main/assets_bin/views/MyPageTool2.lua
