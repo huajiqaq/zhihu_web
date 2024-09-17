@@ -50,6 +50,72 @@
 
 </div>
 
+<style>
+  
+  .slide-content {
+      display: flex;
+  }
+
+  .slide-item {
+      flex-shrink: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+
+  .slide-item img {
+      max-width: 100%;
+      max-height: 100vh;
+      object-fit: contain;
+  }
+
+  .dots-container {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 10px;
+  }
+
+  .dot {
+      width: 7px;
+      height: 7px;
+      background-color: #ebeced;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.5s;
+  }
+
+  .slick-active {
+      background-color: #0988ff !important;
+  }
+
+  /* 隐藏滚动条 */
+  /* Chrome, Safari, Opera */
+  .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+
+  .hide-scrollbar {
+      /* IE 和 Edge */
+      -ms-overflow-style: none;
+      /* Firefox */
+      scrollbar-width: none;
+  }
+
+  .index-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 16px;
+      color: white;
+      z-index: 1000;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+  }
+</style>
+
 <script>
 
   function resolveData(data) {
@@ -325,7 +391,7 @@
         avatarImg.src = content.avatar_url;
         avatarImg.style.borderRadius = '50%';
         avatarImg.style.width = '50px';
-        avatarImg.style.margin = "auto"
+        avatarImg.style.margin = "auto 0"
 
         // 创建文字容器
         const textContainer = document.createElement('div');
@@ -359,10 +425,62 @@
         return newSpan
         break;
       case "imglist":
+
+        // 创建 DOM 结构
+        const sliderDiv = document.createElement('div');
+        sliderDiv.style.position = 'relative';
+
+        const scollContainer = document.createElement('div');
+        scollContainer.id = 'scollContainer';
+
+        const slideContent = document.createElement('div');
+        slideContent.className = 'slide-content';
+        slideContent.id = 'slideContent';
+
+        const currentIndexIndicator = document.createElement('div');
+        currentIndexIndicator.className = 'index-indicator';
+        currentIndexIndicator.id = 'currentIndex';
+
+        const indicatorContainer = document.createElement('div');
+        indicatorContainer.id = 'indicatorContainer';
+
+        // 将元素添加到父元素中
+        scollContainer.appendChild(slideContent);
+        scollContainer.appendChild(currentIndexIndicator);
+        sliderDiv.appendChild(scollContainer);
+        sliderDiv.appendChild(indicatorContainer);
+
+        const images = content.images
+        // 创建图像元素
+        images.forEach(element => {
+          const slideItem = document.createElement('div');
+          slideItem.classList.add('slide-item');
+          const img = document.createElement('img');
+          img.src = element.url;
+          slideItem.appendChild(img);
+          slideContent.appendChild(slideItem);
+        });
+
+        const swiperAPI = setupSwiper(scollContainer, slideContent, indicatorContainer); // 传入小圆点的容器
+
+        let timeoutId; // 在这里声明 timeoutId
+        // 用户注册 currindex 改变的监听器
+        swiperAPI.onCurrentIndexChanged(function (index) {
+          currentIndexIndicator.textContent = `${index + 1}/${images.length}`;
+          console.log(`当前索引改变为: ${index}`);
+          // 显示索引指示器
+          currentIndexIndicator.style.display = 'block';
+          // 清除定时器并重新设置
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            currentIndexIndicator.style.display = 'none'; // 隐藏指示器
+          }, 2000); // 设置2秒的延迟
+        });
+
         var newSpan = document.createElement('h3');
         newSpan.textContent = "图片列表 待制作中（网页暂未实现）";
         newSpan.style.display = "block"
-        return newSpan
+        return sliderDiv
         break;
       default:
         // 处理未知类型的情况
@@ -521,6 +639,98 @@
   }
 
   loadContent()
+
+
+  function setupSwiper(scrollContainer, slideContent, indicatorContainer) {
+    // 动态设置滚动容器样式
+    setScrollStyles(scrollContainer);
+
+    // 动态设置每个子项的滚动对齐方式
+    setSlideItemStyles(slideContent);
+
+    let currentPage = 0; // 当前显示的页面索引
+    const totalPages = slideContent.children.length;
+
+    function setScrollStyles(container) {
+      container.style.overflowY = 'hidden';
+      container.style.overflowX = 'auto';
+      container.style.scrollSnapType = 'x mandatory';
+      container.style.scrollBehavior = 'smooth'; // 平滑滚动行为
+      container.classList.add('hide-scrollbar'); // 添加类名以隐藏滚动条
+    }
+
+    function setSlideItemStyles(content) {
+      const items = content.children;
+      for (let i = 0; i < items.length; i++) {
+        items[i].style.scrollSnapAlign = 'center';
+      }
+    }
+
+    function createDots(numDots) {
+      const dotsContainer = document.createElement('div');
+      dotsContainer.classList.add('dots-container');
+
+      for (let i = 0; i < numDots; i++) {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dot.addEventListener('click', function () {
+          slideToIndex(i);
+        });
+        dotsContainer.appendChild(dot);
+      }
+
+      indicatorContainer.appendChild(dotsContainer);
+      // 默认高亮第一个
+      updateDots(0);
+    }
+
+    function updateDots(activeIndex) {
+      const dotList = indicatorContainer.querySelector('.dots-container').children;
+      for (let i = 0; i < dotList.length; i++) {
+        dotList[i].classList.remove('slick-active');
+      }
+      dotList[activeIndex].classList.add('slick-active');
+    }
+
+    function updateCurrentPage(scrollLeft) {
+      const pageWidth = scrollContainer.clientWidth;
+      const newIndex = Math.round(scrollLeft / pageWidth);
+
+      // 如果新的索引与当前索引不同且在有效范围内，则更新当前页面
+      if (newIndex !== currentPage && newIndex >= 0 && newIndex < slideContent.children.length) {
+        currentPage = newIndex;
+        updateDots(currentPage);
+        emitCurrentIndexChanged(newIndex); // 触发 currindex 改变事件
+      }
+    }
+
+    function emitCurrentIndexChanged(index) {
+      if (typeof onCurrentIndexChanged === 'function') {
+        onCurrentIndexChanged(index);
+      }
+    }
+
+    function slideToIndex(index) {
+      scrollContainer.scrollLeft = index * scrollContainer.clientWidth;
+    }
+
+    // 初始化
+    createDots(totalPages);
+    scrollContainer.addEventListener('scroll', function () {
+      updateCurrentPage(scrollContainer.scrollLeft);
+    });
+
+    // 提供给用户的 API
+    function onCurrentIndexChanged(callback) {
+      onCurrentIndexChanged = callback;
+      // 初始化时也更新一次索引指示器
+      callback(currentPage);
+    }
+
+    return {
+      onCurrentIndexChanged: onCurrentIndexChanged,
+    };
+  }
 
 </script>
 
