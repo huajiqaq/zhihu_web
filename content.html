@@ -67,6 +67,7 @@
     max-width: 100%;
     max-height: 100vh;
     object-fit: contain;
+    -webkit-user-drag: none;
   }
 
   .dots-container {
@@ -716,8 +717,58 @@
       scrollContainer.scrollLeft = index * scrollContainer.clientWidth;
     }
 
+    /**
+* 拖动内容，滚动条滚动，横向
+* @param {Element} container 需要拖动的面板
+* @param {number} [dragMultiplier=1] 拖拽倍数，默认为1
+*/
+    function dragMoveX(container, dragMultiplier = 1) {
+      let isDragging = false;
+      let startX;
+      let scrollLeft;
+
+      // 设置初始样式
+      const setInitialStyles = (isDragging) => {
+        container.style.cursor = isDragging ? 'grabbing' : 'pointer';
+        container.style.userSelect = isDragging ? 'none' : '';
+      };
+
+      // 鼠标按下
+      container.addEventListener('mousedown', (event) => {
+        isDragging = true;
+        startX = event.clientX;
+        scrollLeft = container.scrollLeft;
+        setInitialStyles(isDragging);
+      });
+
+      // 鼠标移动
+      container.addEventListener('mousemove', (event) => {
+        if (isDragging) {
+          const moveX = event.clientX;
+          const scrollX = (moveX - startX) * dragMultiplier;
+          container.scrollLeft = scrollLeft - scrollX;
+        }
+      });
+
+      // 鼠标释放
+      container.addEventListener('mouseup', () => {
+        isDragging = false;
+        setInitialStyles(isDragging);
+        container.blur(); // 调用 blur 方法
+      });
+
+      // 鼠标移出元素
+      container.addEventListener('mouseleave', (event) => {
+        isDragging = false;
+        setInitialStyles(isDragging);
+        container.blur(); // 调用 blur 方法
+      });
+    }
+
     // 初始化
     createDots(totalPages);
+    // 初始化拖动功能
+    dragMoveX(scrollContainer, 2.0);
     scrollContainer.addEventListener('scroll', function () {
       updateCurrentPage(scrollContainer.scrollLeft);
     });
@@ -733,6 +784,7 @@
       onCurrentIndexChanged: onCurrentIndexChanged,
     };
   }
+
 
 </script>
 
