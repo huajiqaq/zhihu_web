@@ -94,7 +94,7 @@ class SwipeRefresh extends HTMLElement {
         this.currentY = 'touches' in event ? event.touches[0].clientY : event.clientY;
         const diff = Math.min(this.currentY - this.startY, this.maxDragDistance);
 
-        if (diff > 10) {
+        if (diff > 10 && this.container.scrollTop === 0) {
             this.refreshIndicator.style.display = 'block';
             this.refreshIndicator.style.transform = `translateX(-50%) translateY(${diff}px)`;
         } else {
@@ -109,7 +109,7 @@ class SwipeRefresh extends HTMLElement {
 
     handleEnd(event) {
         if (!this.isDragging || this.isRefreshing) return;
-        if (this.diff > this.threshold) {
+        if (this.diff > this.threshold && this.container.scrollTop === 0) {
             this.showRefreshIndicator();
         } else {
             this.hideRefreshIndicator()
