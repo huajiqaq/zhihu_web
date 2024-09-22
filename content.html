@@ -767,8 +767,7 @@
 
     // 初始化
     createDots(totalPages);
-    // 初始化拖动功能
-    dragMoveX(scrollContainer, 2.0);
+    dragMoveX(scrollContainer, 1.5);
     scrollContainer.addEventListener('scroll', function () {
       updateCurrentPage(scrollContainer.scrollLeft);
     });

@@ -14,6 +14,7 @@
   <style>
     body {
       margin: 0;
+      overflow-y: hidden !important;
     }
 
     [fixed] {
@@ -69,8 +70,12 @@
           <div id="home">
             <mdui-tabs value="tab-1" variant="primary">
               <mdui-tab value="tab-1">全站</mdui-tab>
+
+              <swipe-refresh slot="panel">
+                <div class="content" style="margin:16px"></div>
+              </swipe-refresh>
+
             </mdui-tabs>
-            <div class="carditem" style="margin:16px"></div>
           </div>
 
         </div>
@@ -81,6 +86,15 @@
 </div>
 
 <script src="./js/router.js"></script>
+
+<script src="./js/SwipeRefresh.js"></script>
+
+<script src="./js/InfiniteLoader.js"></script>
+
+<script src="./js/MyPageTool.js"></script>
+<script src="./js/zHttp.js"></script>
+<script src="./js/model/home_recommend.js"></script>
+
 
 <script>
 
@@ -100,10 +114,17 @@
         path: "/home",
         name: "home",
         callback: function (route) {
+          const home = document.getElementById("home")
+          const content = home.querySelector(".content")
+          const sr = home.querySelector("swipe-refresh")
+          console.log(sr.setHeight)
+          sr.setHeight("calc(100vh - 192px)")
+          window.home_pagetool = new home_recommend().initpage(content, sr)
+          home_pagetool.refer()
           // 获取容器
-          window.cardContainer = document.querySelector('.carditem');
+          //cardContainer = document.querySelector('.carditem');
           // 使用 createInfiniteLoader 函数
-          createInfiniteLoader(cardContainer, loadMoreContent);
+          //createInfiniteLoader(cardContainer, loadMoreContent);
         }
       }]
     }
@@ -255,7 +276,7 @@
   }
 
   // 示例加载函数
-  function loadMoreContent(observerDiv) {
+  function loadMoreContent() {
     return new Promise((resolve, reject) => {
       GM_xmlhttpRequest({
         url: "https://api.zhihu.com/topstory/recommend",
