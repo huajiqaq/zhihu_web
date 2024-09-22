@@ -121,25 +121,8 @@ class Base {
 
         const idContent = data.id内容;
 
-        card.addEventListener("click", () => {
-            if (getLogin()) {
-                homePagetool.getItemData()[position].isread = '"r"';
-
-                const postdata = JSON.stringify(readdata);
-                const encodedPostdata = encodeURIComponent(`[["r",${postdata}]]`);
-                const finalPostdata = `targets=${encodedPostdata}`;
-
-                zHttp.post("https://api.zhihu.com/lastread/touch/v2", finalPostdata, apphead, (code, content) => {
-                    if (code === 200) {
-                        // 处理成功响应
-                    }
-                });
-            }
-            this.handleClick(idContent, title);
-        })
-
         // 后续适配
-        card.addEventListener("click", () => {
+        card.onClick = (view) => {
             if (getLogin()) {
                 homePagetool.getItemData()[position].isread = '"r"';
 
@@ -154,7 +137,7 @@ class Base {
                 });
             }
             this.handleClick(idContent, title);
-        })
+        }
 
         // 长按后期支持
         card.onLongClick = (view) => {
