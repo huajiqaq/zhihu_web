@@ -83,14 +83,12 @@ class SwipeRefresh extends HTMLElement {
     }
 
     handleStart(event) {
-        event.preventDefault();
         this.isDragging = true;
         this.startY = 'touches' in event ? event.touches[0].clientY : event.clientY;
         this.clearTimeout(); // 清除之前的定时器
     }
 
     handleMove(event) {
-        event.preventDefault();
         if (!this.isDragging || this.isRefreshing) return;
         this.shadowRoot.querySelector('.content').style.pointerEvents = "none";
         this.currentY = 'touches' in event ? event.touches[0].clientY : event.clientY;
